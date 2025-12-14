@@ -34,16 +34,36 @@
             </div>
 
             <div class="form-group mb-3">
-                <label for="password">Password *</label>
-                <input type="password" name="password" id="password" class="form-control @error('password') is-invalid @enderror" required>
-                @error('password')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
+                <label class="mb-2">Account Creation Method</label>
+                <div class="form-check">
+                    <input type="radio" name="creation_method" id="creation_method_create" value="create" 
+                           class="form-check-input" checked onchange="togglePasswordFields()">
+                    <label for="creation_method_create" class="form-check-label">
+                        Create with Password
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input type="radio" name="creation_method" id="creation_method_invite" value="invite" 
+                           class="form-check-input" onchange="togglePasswordFields()">
+                    <label for="creation_method_invite" class="form-check-label">
+                        Invite by Email (user will set their own password)
+                    </label>
+                </div>
             </div>
 
-            <div class="form-group mb-3">
-                <label for="password_confirmation">Confirm Password *</label>
-                <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" required>
+            <div id="password-fields">
+                <div class="form-group mb-3">
+                    <label for="password">Password *</label>
+                    <input type="password" name="password" id="password" class="form-control @error('password') is-invalid @enderror" required>
+                    @error('password')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="password_confirmation">Confirm Password *</label>
+                    <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" required>
+                </div>
             </div>
 
             <div class="form-group mb-3">
@@ -95,21 +115,108 @@
             </div>
 
             <div class="form-group">
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i> Create User
+                <button type="submit" class="btn btn-primary" id="submit-button">
+                    <i class="fas fa-save"></i> <span id="submit-text">Create User</span>
                 </button>
                 <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> Back to Users
                 </a>
             </div>
         </form>
+        
+        <form action="{{ route('admin.users.invite') }}" method="POST" id="invite-form" style="display: none;">
+            @csrf
+            <input type="hidden" name="name" id="invite_name">
+            <input type="hidden" name="email" id="invite_email">
+            <input type="hidden" name="super_admin" id="invite_super_admin">
+        </form>
     </div>
 </div>
 
 <script>
+function togglePasswordFields() {
+    const createMethod = document.getElementById('creation_method_create');
+    const inviteMethod = document.getElementById('creation_method_invite');
+    const passwordFields = document.getElementById('password-fields');
+    const passwordInput = document.getElementById('password');
+    const passwordConfirmationInput = document.getElementById('password_confirmation');
+    const submitButton = document.getElementById('submit-button');
+    const submitText = document.getElementById('submit-text');
+    
+    if (inviteMethod.checked) {
+        passwordFields.style.display = 'none';
+        passwordInput.removeAttribute('required');
+        passwordConfirmationInput.removeAttribute('required');
+        submitText.textContent = 'Send Invitation';
+    } else {
+        passwordFields.style.display = 'block';
+        passwordInput.setAttribute('required', 'required');
+        passwordConfirmationInput.setAttribute('required', 'required');
+        submitText.textContent = 'Create User';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const superAdminCheckbox = document.getElementById('super_admin');
     const projectsSection = document.getElementById('projects-section');
+    const createForm = document.querySelector('form[action="{{ route('admin.users.store') }}"]');
+    const inviteForm = document.getElementById('invite-form');
+    const submitButton = document.getElementById('submit-button');
+    
+    // Handle form submission based on creation method
+    createForm.addEventListener('submit', function(e) {
+        const inviteMethod = document.getElementById('creation_method_invite');
+        
+        if (inviteMethod.checked) {
+            e.preventDefault();
+            
+            // Collect form data
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const superAdmin = document.getElementById('super_admin').checked ? '1' : '';
+            
+            // Collect projects and roles
+            const projects = [];
+            const projectRoles = {};
+            document.querySelectorAll('.project-checkbox:checked').forEach(function(checkbox) {
+                const projectId = checkbox.value;
+                projects.push(projectId);
+                const roleSelect = document.getElementById('role_' + projectId);
+                projectRoles[projectId] = roleSelect.value;
+            });
+            
+            // Populate invite form
+            document.getElementById('invite_name').value = name;
+            document.getElementById('invite_email').value = email;
+            document.getElementById('invite_super_admin').value = superAdmin;
+            
+            // Remove any existing project/role inputs
+            inviteForm.querySelectorAll('input[name^="projects"], input[name^="project_roles"]').forEach(function(input) {
+                input.remove();
+            });
+            
+            // Create hidden inputs for projects array
+            projects.forEach(function(projectId) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'projects[]';
+                input.value = projectId;
+                inviteForm.appendChild(input);
+            });
+            
+            // Create hidden inputs for project_roles
+            Object.keys(projectRoles).forEach(function(projectId) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'project_roles[' + projectId + ']';
+                input.value = projectRoles[projectId];
+                inviteForm.appendChild(input);
+            });
+            
+            // Submit invite form
+            inviteForm.submit();
+        }
+    });
     
     // Handle super admin checkbox change
     superAdminCheckbox.addEventListener('change', function() {
@@ -144,6 +251,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Initialize on page load
         roleSelect.disabled = !checkbox.checked;
     });
+    
+    // Initialize password fields display
+    togglePasswordFields();
 });
 </script>
 

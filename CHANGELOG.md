@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2025-12-14
+
+### Added
+- User invitation system: Administrators can now invite users by email without setting a password
+- Invited users receive an email with a secure token link to set their own password
+- Invitation acceptance page where users can set their password and automatically log in
+- Password field in users table is now nullable to support invited users
+- Collapsible sidebar functionality with toggle button in navbar
+- Sidebar collapses to icon-only mode (70px width) showing tooltips on hover
+- Sidebar state (collapsed/expanded) persists across page reloads using localStorage
+- Smooth CSS transitions for sidebar collapse/expand animations
+
+### Changed
+- User creation form now supports two modes: "Create with Password" and "Invite by Email"
+- Sidebar width is now configurable via CSS variable `--sidebar-width` (default: 260px)
+
 ## [0.3.3] - 2025-12-14
 
 ### Added
@@ -244,6 +260,7 @@ php artisan db:seed
 ## Contributors
 - Initial structure based on [SES Dashboard](https://github.com/Nikeev/sesdashboard) by Nikeev (MIT License)
 
+[0.4.0]: https://github.com/yourusername/sestracking/releases/tag/v0.4.0
 [0.3.3]: https://github.com/yourusername/sestracking/releases/tag/v0.3.3
 [0.3.2]: https://github.com/yourusername/sestracking/releases/tag/v0.3.2
 [0.3.1]: https://github.com/yourusername/sestracking/releases/tag/v0.3.1

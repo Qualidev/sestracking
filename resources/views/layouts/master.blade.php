@@ -18,6 +18,9 @@
 <body class="h-100">
 <nav class="navbar navbar-dark fixed-top bg-colored flex-md-nowrap p-0 shadow-sm">
   <div class="d-flex align-items-center">
+    <button class="btn btn-link text-white ms-2 d-md-block d-none" id="sidebarToggle" type="button" aria-label="Toggle sidebar">
+      <i class="fas fa-bars"></i>
+    </button>
     <a class="navbar-brand" href="/">
       <i class="fas fa-chart-line me-2"></i>
       SES Tracking
@@ -79,6 +82,61 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const sidebar = document.querySelector('.sidebar');
+  const sidebarToggle = document.getElementById('sidebarToggle');
+  
+  if (!sidebar) {
+    console.error('Sidebar element not found');
+    return;
+  }
+  
+  if (!sidebarToggle) {
+    console.error('Sidebar toggle button not found');
+    return;
+  }
+  
+  // Check localStorage for saved state
+  const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+  
+  if (isCollapsed) {
+    sidebar.classList.add('collapsed');
+    const icon = sidebarToggle.querySelector('i');
+    if (icon) {
+      icon.classList.remove('fa-bars');
+      icon.classList.add('fa-chevron-right');
+    }
+  }
+  
+  // Toggle sidebar
+  sidebarToggle.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const wasCollapsed = sidebar.classList.contains('collapsed');
+    sidebar.classList.toggle('collapsed');
+    const isNowCollapsed = sidebar.classList.contains('collapsed');
+    
+    console.log('Sidebar toggled:', { wasCollapsed, isNowCollapsed, classes: sidebar.className });
+    
+    localStorage.setItem('sidebarCollapsed', isNowCollapsed);
+    
+    // Update icon
+    const icon = this.querySelector('i');
+    if (icon) {
+      if (isNowCollapsed) {
+        icon.classList.remove('fa-bars');
+        icon.classList.add('fa-chevron-right');
+      } else {
+        icon.classList.remove('fa-chevron-right');
+        icon.classList.add('fa-bars');
+      }
+    }
+  });
+});
+</script>
 
 @yield('scripts')
 

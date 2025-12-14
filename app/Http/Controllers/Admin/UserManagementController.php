@@ -8,7 +8,9 @@ use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\Rule;
+use App\Notifications\UserInvitation;
 
 class UserManagementController extends Controller
 {
@@ -142,5 +144,47 @@ class UserManagementController extends Controller
 
         return redirect()->route('admin.users.index')
             ->with('success', 'User deleted successfully.');
+    }
+
+    /**
+     * Invite a new user by email without setting a password
+     */
+    public function invite(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'super_admin' => 'boolean',
+            'projects' => 'array',
+            'projects.*' => 'exists:projects,id',
+            'project_roles' => 'array',
+            'project_roles.*' => ['required', 'in:admin,user']
+        ]);
+
+        DB::transaction(function () use ($request) {
+            // Create user without password
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => null, // No password set for invited users
+                'super_admin' => $request->has('super_admin'),
+            ]);
+
+            // Attach projects with roles (only if not super admin)
+            if (!$user->isSuperAdmin() && $request->has('projects')) {
+                $projectsToAttach = [];
+                foreach ($request->projects as $projectId) {
+                    $role = $request->project_roles[$projectId] ?? 'user';
+                    $projectsToAttach[$projectId] = ['role' => $role];
+                }
+                $user->projects()->attach($projectsToAttach);
+            }
+
+            // Send invitation email
+            $user->notify(new UserInvitation());
+        });
+
+        return redirect()->route('admin.users.index')
+            ->with('success', 'Invitation sent successfully to ' . $request->email);
     }
 }

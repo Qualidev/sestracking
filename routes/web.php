@@ -18,6 +18,10 @@ Route::get('login',[AuthController::class,'login'])->name('login');
 Route::post('login',[AuthController::class,'login'])->name('login');
 Route::post('webhook/{token}', App\Http\Controllers\SesWebhookController::class);
 
+// Invitation routes (public)
+Route::get('invitation/accept/{token}', [App\Http\Controllers\InvitationController::class, 'show'])->name('invitation.show');
+Route::post('invitation/accept', [App\Http\Controllers\InvitationController::class, 'accept'])->name('invitation.accept');
+
 
 
 Route::group([
@@ -51,6 +55,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::resource('projects', App\Http\Controllers\Admin\ProjectManagementController::class);
     Route::get('projects/search-users', [App\Http\Controllers\Admin\ProjectManagementController::class, 'searchUsers'])->name('projects.search-users');
     Route::resource('users', App\Http\Controllers\Admin\UserManagementController::class);
+    Route::post('users/invite', [App\Http\Controllers\Admin\UserManagementController::class, 'invite'])->name('users.invite');
 });
 
 // Project request management routes (super admin only)
