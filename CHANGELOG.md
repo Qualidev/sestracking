@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.4] - 2025-12-14
+
+### Added
+- Comprehensive migration to ensure all expected columns exist in all tables
+- `ensure_all_table_columns_exist` migration checks all tables and adds missing columns
+- Covers all application tables: users, projects, project_user, emails, email_recipients, recipient_events, project_requests
+
+### Fixed
+- Production database schema synchronization - ensures all tables have all expected columns
+- Prevents column-related errors by automatically adding missing columns
+- Migration is idempotent and safe to run multiple times
+
 ## [0.2.3] - 2025-12-14
 
 ### Fixed
@@ -152,6 +164,7 @@ php artisan db:seed
 ## Contributors
 - Initial structure based on [SES Dashboard](https://github.com/Nikeev/sesdashboard) by Nikeev (MIT License)
 
+[0.2.4]: https://github.com/yourusername/sestracking/releases/tag/v0.2.4
 [0.2.3]: https://github.com/yourusername/sestracking/releases/tag/v0.2.3
 [0.2.2]: https://github.com/yourusername/sestracking/releases/tag/v0.2.2
 [0.2.1]: https://github.com/yourusername/sestracking/releases/tag/v0.2.1
