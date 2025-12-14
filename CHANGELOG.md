@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.5] - 2025-12-14
+
+### Added
+- Artisan command `user:make-super-admin` to make existing users super admins
+- Command accepts user email or ID as identifier
+- `--remove` option to remove super admin status
+- Useful for production deployments and user management
+
 ## [0.2.4] - 2025-12-14
 
 ### Added
@@ -164,6 +172,7 @@ php artisan db:seed
 ## Contributors
 - Initial structure based on [SES Dashboard](https://github.com/Nikeev/sesdashboard) by Nikeev (MIT License)
 
+[0.2.5]: https://github.com/yourusername/sestracking/releases/tag/v0.2.5
 [0.2.4]: https://github.com/yourusername/sestracking/releases/tag/v0.2.4
 [0.2.3]: https://github.com/yourusername/sestracking/releases/tag/v0.2.3
 [0.2.2]: https://github.com/yourusername/sestracking/releases/tag/v0.2.2
