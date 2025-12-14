@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2025-12-14
+
+### Fixed
+- Production error: `Field 'opens' doesn't have a default value` in emails table
+- Added migration to ensure `opens` and `clicks` columns have default values (0) in `emails` table
+- Migration alters existing columns to add defaults or adds columns with defaults if missing
+
 ## [0.3.0] - 2025-12-14
 
 ### Fixed
@@ -215,6 +222,7 @@ php artisan db:seed
 ## Contributors
 - Initial structure based on [SES Dashboard](https://github.com/Nikeev/sesdashboard) by Nikeev (MIT License)
 
+[0.3.1]: https://github.com/yourusername/sestracking/releases/tag/v0.3.1
 [0.3.0]: https://github.com/yourusername/sestracking/releases/tag/v0.3.0
 [0.2.9]: https://github.com/yourusername/sestracking/releases/tag/v0.2.9
 [0.2.8]: https://github.com/yourusername/sestracking/releases/tag/v0.2.8
