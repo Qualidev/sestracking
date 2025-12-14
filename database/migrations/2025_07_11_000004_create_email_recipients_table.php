@@ -11,17 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('email_recipients', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('email_id')->constrained()->cascadeOnDelete();
-            $table->string('address');
-            $table->enum('status', [
-                'pending','delivered','bounced','complained','rejected'
-            ])->default('pending');
-            $table->timestamps();
+        if (!Schema::hasTable('email_recipients')) {
+            Schema::create('email_recipients', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('email_id')->constrained()->cascadeOnDelete();
+                $table->string('address');
+                $table->enum('status', [
+                    'pending','delivered','bounced','complained','rejected'
+                ])->default('pending');
+                $table->timestamps();
 
-            $table->unique(['email_id', 'address']);
-        });
+                $table->unique(['email_id', 'address']);
+            });
+        }
     }
 
     /**

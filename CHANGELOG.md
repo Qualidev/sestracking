@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2025-12-13
+
+### Fixed
+- Production migration safety - all table creation migrations now check if tables exist before creating them
+- Prevents migration errors when deploying to production databases with existing tables
+- Migrations are now idempotent and safe to run multiple times
+- Fixed `SQLSTATE[42S01]: Base table or view already exists` errors in production deployments
+
+### Changed
+- All `Schema::create()` calls in migrations now use `Schema::hasTable()` checks for production safety
+- Migrations can now be safely run on both fresh and existing databases
+
 ## [0.2.1] - 2025-12-13
 
 ### Added
@@ -133,6 +145,7 @@ php artisan db:seed
 ## Contributors
 - Initial structure based on [SES Dashboard](https://github.com/Nikeev/sesdashboard) by Nikeev (MIT License)
 
+[0.2.2]: https://github.com/yourusername/sestracking/releases/tag/v0.2.2
 [0.2.1]: https://github.com/yourusername/sestracking/releases/tag/v0.2.1
 [0.2.0]: https://github.com/yourusername/sestracking/releases/tag/v0.2.0
 [0.1.0]: https://github.com/yourusername/sestracking/releases/tag/v0.1.0

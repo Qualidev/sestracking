@@ -11,19 +11,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('emails', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('project_id')->constrained()->cascadeOnDelete();
-            $table->string('message_id');
-            $table->string('source');
-            $table->string('subject')->nullable();
-            $table->timestamp('sent_at');
-            $table->unsignedInteger('opens')->default(0);
-            $table->unsignedInteger('clicks')->default(0);
-            $table->timestamps();
+        if (!Schema::hasTable('emails')) {
+            Schema::create('emails', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('project_id')->constrained()->cascadeOnDelete();
+                $table->string('message_id');
+                $table->string('source');
+                $table->string('subject')->nullable();
+                $table->timestamp('sent_at');
+                $table->unsignedInteger('opens')->default(0);
+                $table->unsignedInteger('clicks')->default(0);
+                $table->timestamps();
 
-            $table->unique(['project_id', 'message_id']);
-        });
+                $table->unique(['project_id', 'message_id']);
+            });
+        }
     }
 
     /**

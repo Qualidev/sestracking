@@ -11,19 +11,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('project_requests', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('requested_by')->constrained('users')->onDelete('cascade');
-            $table->string('name');
-            $table->text('description')->nullable();
-            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
-            $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('set null');
-            $table->foreignId('project_id')->nullable()->constrained('projects')->onDelete('set null');
-            $table->text('rejection_reason')->nullable();
-            $table->timestamp('approved_at')->nullable();
-            $table->timestamp('rejected_at')->nullable();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('project_requests')) {
+            Schema::create('project_requests', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('requested_by')->constrained('users')->onDelete('cascade');
+                $table->string('name');
+                $table->text('description')->nullable();
+                $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+                $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('set null');
+                $table->foreignId('project_id')->nullable()->constrained('projects')->onDelete('set null');
+                $table->text('rejection_reason')->nullable();
+                $table->timestamp('approved_at')->nullable();
+                $table->timestamp('rejected_at')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     /**
