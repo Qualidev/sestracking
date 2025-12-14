@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3] - 2025-12-14
+
+### Fixed
+- Production database error: `Column not found: 1054 Unknown column 'project_user.created_at'`
+- Added migration to add missing `created_at` and `updated_at` columns to `project_user` pivot table
+- Fixes issue where production databases created before timestamps were added to pivot table
+
 ## [0.2.2] - 2025-12-13
 
 ### Fixed
@@ -145,6 +152,7 @@ php artisan db:seed
 ## Contributors
 - Initial structure based on [SES Dashboard](https://github.com/Nikeev/sesdashboard) by Nikeev (MIT License)
 
+[0.2.3]: https://github.com/yourusername/sestracking/releases/tag/v0.2.3
 [0.2.2]: https://github.com/yourusername/sestracking/releases/tag/v0.2.2
 [0.2.1]: https://github.com/yourusername/sestracking/releases/tag/v0.2.1
 [0.2.0]: https://github.com/yourusername/sestracking/releases/tag/v0.2.0
