@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2025-12-14
+
+### Fixed
+- Production error: `Field 'status' doesn't have a default value` in emails table
+- Added migration to alter existing `status` column to nullable in `emails` table
+- Migration handles both cases: alters existing NOT NULL column to nullable, or adds column if missing
+
 ## [0.2.9] - 2025-12-14
 
 ### Fixed
@@ -208,6 +215,7 @@ php artisan db:seed
 ## Contributors
 - Initial structure based on [SES Dashboard](https://github.com/Nikeev/sesdashboard) by Nikeev (MIT License)
 
+[0.3.0]: https://github.com/yourusername/sestracking/releases/tag/v0.3.0
 [0.2.9]: https://github.com/yourusername/sestracking/releases/tag/v0.2.9
 [0.2.8]: https://github.com/yourusername/sestracking/releases/tag/v0.2.8
 [0.2.7]: https://github.com/yourusername/sestracking/releases/tag/v0.2.7
