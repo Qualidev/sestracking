@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.3] - 2025-12-14
+
+### Added
+- Bounced Recipients Report tab on Reports page
+- Report shows all bounced email recipients with bounce type, bounce subtype, timestamp, project, email subject, and sender
+- CSV export support for bounced recipients report
+
+### Fixed
+- Webhook controller now correctly extracts bounced recipients from `bounce.bouncedRecipients[].emailAddress` array
+- Bounce event timestamp extraction now uses `bounce.timestamp` instead of generic timestamp fallback
+- Email addresses are properly trimmed and lowercased when processing bounce events
+- Added CSV header mappings for bounced recipients report export
+
 ## [0.3.2] - 2025-12-14
 
 ### Fixed
@@ -231,6 +244,7 @@ php artisan db:seed
 ## Contributors
 - Initial structure based on [SES Dashboard](https://github.com/Nikeev/sesdashboard) by Nikeev (MIT License)
 
+[0.3.3]: https://github.com/yourusername/sestracking/releases/tag/v0.3.3
 [0.3.2]: https://github.com/yourusername/sestracking/releases/tag/v0.3.2
 [0.3.1]: https://github.com/yourusername/sestracking/releases/tag/v0.3.1
 [0.3.0]: https://github.com/yourusername/sestracking/releases/tag/v0.3.0

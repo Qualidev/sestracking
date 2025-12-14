@@ -79,6 +79,11 @@
                 <i class="fas fa-paper-plane me-2"></i>Senders Report
             </button>
         </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="bounced-tab" data-bs-toggle="tab" data-bs-target="#bounced-report" type="button" role="tab" aria-controls="bounced-report" aria-selected="false">
+                <i class="fas fa-exclamation-triangle me-2"></i>Bounced Recipients
+            </button>
+        </li>
     </ul>
 
     <!-- Tab Content -->
@@ -163,6 +168,33 @@
                 </div>
             </div>
         </div>
+
+        <!-- Bounced Recipients Report -->
+        <div class="tab-pane fade" id="bounced-report" role="tabpanel" aria-labelledby="bounced-tab">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Bounced Recipients Report</h5>
+                    <button type="button" id="export-bounced" class="btn btn-sm btn-outline-primary" disabled>
+                        <i class="fas fa-download me-1"></i> Export
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="bounced-loading" class="text-center py-5" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Loading bounced recipients report...</p>
+                    </div>
+                    <div id="bounced-error" class="alert alert-danger" style="display: none;"></div>
+                    <div id="bounced-content">
+                        <div class="text-center py-5 text-muted">
+                            <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                            <p>Select filters and click "Generate Reports" to view the bounced recipients report</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 @else
     <div class="card">
@@ -193,6 +225,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let emailsData = [];
     let recipientsData = [];
     let sendersData = [];
+    let bouncedData = [];
 
     // Project selector handler
     if (projectSelector) {
@@ -237,6 +270,7 @@ document.addEventListener('DOMContentLoaded', function() {
         loadEmailsReport();
         loadRecipientsReport();
         loadSendersReport();
+        loadBouncedRecipientsReport();
     }
 
     // Load emails report
@@ -521,6 +555,103 @@ document.addEventListener('DOMContentLoaded', function() {
         contentEl.innerHTML = html;
     }
 
+    // Load bounced recipients report
+    function loadBouncedRecipientsReport() {
+        const dateFrom = dateFromInput.value;
+        const dateTo = dateToInput.value;
+        const loadingEl = document.getElementById('bounced-loading');
+        const errorEl = document.getElementById('bounced-error');
+        const contentEl = document.getElementById('bounced-content');
+        const exportBtn = document.getElementById('export-bounced');
+
+        if (!loadingEl || !errorEl || !contentEl || !exportBtn) return;
+
+        loadingEl.style.display = 'block';
+        errorEl.style.display = 'none';
+        contentEl.innerHTML = '';
+
+        fetch(`{{ route('reports.bounced-recipients') }}?projectId=${encodeURIComponent(currentProjectIds)}&dateFrom=${encodeURIComponent(dateFrom)}&dateTo=${encodeURIComponent(dateTo)}`)
+            .then(response => response.json())
+            .then(data => {
+                loadingEl.style.display = 'none';
+                
+                if (data.error) {
+                    errorEl.textContent = data.error;
+                    errorEl.style.display = 'block';
+                    exportBtn.disabled = true;
+                    return;
+                }
+
+                bouncedData = data.data || [];
+                displayBouncedRecipientsReport(bouncedData);
+                exportBtn.disabled = false;
+            })
+            .catch(error => {
+                loadingEl.style.display = 'none';
+                errorEl.textContent = 'Error loading bounced recipients report: ' + error.message;
+                errorEl.style.display = 'block';
+                exportBtn.disabled = true;
+                console.error('Bounced recipients report error:', error);
+            });
+    }
+
+    // Display bounced recipients report
+    function displayBouncedRecipientsReport(data) {
+        const contentEl = document.getElementById('bounced-content');
+        if (!contentEl) return;
+
+        if (data.length === 0) {
+            contentEl.innerHTML = '<div class="text-center py-5 text-muted">No bounced recipients found for the selected filters.</div>';
+            return;
+        }
+
+        let html = `
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Recipient Email</th>
+                            <th>Bounce Type</th>
+                            <th>Bounce Subtype</th>
+                            <th>Bounced At</th>
+                            <th>Project</th>
+                            <th>Email Subject</th>
+                            <th>Email From</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        data.forEach(bounce => {
+            const bounceTypeBadge = bounce.bounce_type === 'Permanent' 
+                ? '<span class="badge bg-danger">Permanent</span>'
+                : '<span class="badge bg-warning">Transient</span>';
+            
+            html += `
+                <tr>
+                    <td>${escapeHtml(bounce.recipient_address || '')}</td>
+                    <td>${bounceTypeBadge}</td>
+                    <td><span class="badge bg-secondary">${escapeHtml(bounce.bounce_subtype || 'Unknown')}</span></td>
+                    <td>${bounce.bounced_at || ''}</td>
+                    <td>${escapeHtml(bounce.project_name || '')}</td>
+                    <td>${escapeHtml(bounce.email_subject || '(No subject)')}</td>
+                    <td>${escapeHtml(bounce.email_source || '')}</td>
+                </tr>
+            `;
+        });
+
+        html += `
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-3 text-muted small">
+                <strong>Total:</strong> ${data.length} bounced recipient(s)
+            </div>
+        `;
+
+        contentEl.innerHTML = html;
+    }
+
     // Helper functions
     function getStatusBadge(status) {
         const badges = {
@@ -543,6 +674,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const exportEmailsBtn = document.getElementById('export-emails');
     const exportRecipientsBtn = document.getElementById('export-recipients');
     const exportSendersBtn = document.getElementById('export-senders');
+    const exportBouncedBtn = document.getElementById('export-bounced');
 
     if (exportEmailsBtn) {
         exportEmailsBtn.addEventListener('click', function() {
@@ -571,6 +703,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    if (exportBouncedBtn) {
+        exportBouncedBtn.addEventListener('click', function() {
+            if (bouncedData.length === 0) return;
+            exportToCSV(bouncedData, 'bounced-recipients-report.csv', [
+                'Recipient Email', 'Bounce Type', 'Bounce Subtype', 'Bounced At', 'Project', 'Email Subject', 'Email From'
+            ]);
+        });
+    }
+
     function exportToCSV(data, filename, headers) {
         // Map headers to data keys
         const headerMap = {
@@ -593,6 +734,12 @@ document.addEventListener('DOMContentLoaded', function() {
             'Bounced': 'status_bounced',
             'Complained': 'status_complained',
             'Other': 'status_other',
+            'Recipient Email': 'recipient_address',
+            'Bounce Type': 'bounce_type',
+            'Bounce Subtype': 'bounce_subtype',
+            'Bounced At': 'bounced_at',
+            'Email Subject': 'email_subject',
+            'Email From': 'email_source',
         };
         
         let csv = headers.join(',') + '\n';

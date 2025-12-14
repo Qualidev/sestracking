@@ -142,14 +142,36 @@ class SesWebhookController extends Controller
             if ($type === 'click')  { $email->increment('clicks'); }
         } else {
             // Standard handling for other event types (send, delivery, bounce, etc.)
-            $recipientAddresses = $ses['delivery']['recipients'] ?? $ses['mail']['destination'];
+            // For bounce events, recipients are in bounce.bouncedRecipients[].emailAddress
+            if ($type === 'bounce' && isset($ses['bounce']['bouncedRecipients'])) {
+                $recipientAddresses = array_column($ses['bounce']['bouncedRecipients'], 'emailAddress');
+            } else {
+                // For other event types, use delivery.recipients or mail.destination
+                $recipientAddresses = $ses['delivery']['recipients'] ?? $ses['mail']['destination'] ?? [];
+            }
 
             foreach ($recipientAddresses as $address) {
+                // Clean up the address (remove whitespace, convert to lowercase)
+                $cleanAddress = strtolower(trim($address));
+                if (empty($cleanAddress)) {
+                    continue;
+                }
+
                 $recipient = EmailRecipient::firstOrCreate(
-                    ['email_id' => $email->id, 'address' => strtolower($address)]
+                    ['email_id' => $email->id, 'address' => $cleanAddress]
                 );
 
                 /* 6️⃣  Store the event once per recipient (use firstOrCreate to handle duplicates) */
+                // Determine event timestamp based on event type
+                $eventTimestamp = null;
+                if ($type === 'bounce' && isset($ses['bounce']['timestamp'])) {
+                    $eventTimestamp = Carbon::parse($ses['bounce']['timestamp']);
+                } elseif (isset($ses[$type]['timestamp'])) {
+                    $eventTimestamp = Carbon::parse($ses[$type]['timestamp']);
+                } else {
+                    $eventTimestamp = Carbon::parse($ses['mail']['timestamp'] ?? now());
+                }
+                
                 RecipientEvent::firstOrCreate(
                     [
                         'sns_message_id' => $messageId,
@@ -157,9 +179,7 @@ class SesWebhookController extends Controller
                         'type'           => $type,
                     ],
                     [
-                        'event_at'       => Carbon::parse(
-                            $ses[$type]['timestamp'] ?? $ses['mail']['timestamp']
-                        ),
+                        'event_at'       => $eventTimestamp,
                         'payload'        => $ses,
                     ]
                 );

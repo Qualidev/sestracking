@@ -300,4 +300,95 @@ class ReportsController extends Controller
             ]
         ]);
     }
+
+    /**
+     * Report 4: List all bounced email recipients with bounce type and bounce subtype
+     */
+    public function bouncedRecipientsReport(Request $request, ProjectAccessService $projectService)
+    {
+        $user = auth()->user();
+        $accessibleProjectIds = $projectService->getAccessibleProjectIds($user);
+        
+        // Validate and get filters
+        $request->validate([
+            'projectId' => 'nullable|string',
+            'dateFrom' => 'required|date',
+            'dateTo' => 'required|date|after_or_equal:dateFrom',
+        ]);
+
+        $projectId = $request->get('projectId', 'all');
+        $dateFrom = Carbon::parse($request->get('dateFrom'))->startOfDay();
+        $dateTo = Carbon::parse($request->get('dateTo'))->endOfDay();
+
+        // Determine which projects to include
+        if ($projectId === 'all' || empty($projectId)) {
+            $selectedProjectIds = $accessibleProjectIds;
+        } else {
+            // Handle comma-separated project IDs
+            if (strpos($projectId, ',') !== false) {
+                $requestedIds = array_map('trim', explode(',', $projectId));
+            } else {
+                $requestedIds = [$projectId];
+            }
+            
+            // Filter to only include accessible project IDs
+            $selectedProjectIds = array_intersect(
+                array_map('intval', $requestedIds),
+                $accessibleProjectIds
+            );
+        }
+
+        if (empty($selectedProjectIds)) {
+            return response()->json(['error' => 'No accessible projects selected'], 403);
+        }
+
+        // Query bounce events with recipient information
+        $bounceEvents = \App\Models\RecipientEvent::where('type', 'bounce')
+            ->whereBetween('event_at', [$dateFrom, $dateTo])
+            ->whereHas('recipient.email', function ($query) use ($selectedProjectIds) {
+                $query->whereIn('project_id', $selectedProjectIds);
+            })
+            ->with(['recipient.email.project'])
+            ->orderBy('event_at', 'desc')
+            ->get();
+
+        // Process bounce events and extract bounce details from payload
+        $bouncedRecipients = $bounceEvents->map(function ($event) {
+            $payload = $event->payload ?? [];
+            $bounce = $payload['bounce'] ?? [];
+            
+            // Extract bounce type and subtype
+            $bounceType = $bounce['bounceType'] ?? 'Unknown';
+            $bounceSubType = $bounce['bounceSubType'] ?? 'Unknown';
+            
+            // Get recipient email address
+            $recipientAddress = $event->recipient->address ?? 'Unknown';
+            
+            // Get email subject and source
+            $email = $event->recipient->email ?? null;
+            $subject = $email->subject ?? '(No subject)';
+            $source = $email->source ?? 'Unknown';
+            $projectName = $email->project->name ?? 'Unknown';
+            
+            return [
+                'recipient_address' => $recipientAddress,
+                'bounce_type' => $bounceType,
+                'bounce_subtype' => $bounceSubType,
+                'bounced_at' => $event->event_at ? $event->event_at->format('Y-m-d H:i:s') : '',
+                'project_name' => $projectName,
+                'email_subject' => $subject,
+                'email_source' => $source,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $bouncedRecipients->values()->toArray(),
+            'filters' => [
+                'projectIds' => $selectedProjectIds,
+                'dateFrom' => $dateFrom->format('Y-m-d'),
+                'dateTo' => $dateTo->format('Y-m-d'),
+            ]
+        ]);
+    }
 }
